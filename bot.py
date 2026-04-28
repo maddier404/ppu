@@ -83,6 +83,6 @@ def create_bot(markov, token, prefix, keep_alive):
     @bot.command(name="help")
     async def help_cmd(ctx):
         await ctx.send(
-            "help\nprefix is !\ncommands:\n-help\n-diag\n-specs\n-speak\n-pronouns\n=vocab=\n-vlist\n-vlength"
+            "help\nprefix is !\ncommands:\n-help\n-diag\n-specs\n-speak\n-pronouns\n-vocab=\n-vlist\n-vlength"
         )
     return bot

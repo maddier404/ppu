@@ -85,7 +85,6 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-@bot.event
 if message.content.lower() == "ppu" and not message.content.startswith("!"):
     await message.channel.send(f"that's me!")
     await bot.process_commands(message)

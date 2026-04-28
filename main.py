@@ -100,7 +100,7 @@ try:
                     result.append(clean)
             sentence = " ".join(result)
             if not sentence.endswith((".", "!", "?")):
-                sentence += rnd.choice([".", ".", ".", "!", "?"])
+                sentence += rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
             words = sentence.split()
             new_words = []
             for i, w in enumerate(words):

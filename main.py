@@ -1,5 +1,6 @@
 # imports
 import os
+import string
 import numpy as np
 import random as rnd
 from pathlib import Path
@@ -23,8 +24,8 @@ def keep_alive():
 file_path = Path('corpus.txt')
 corpus = file_path.read_text()
 words = corpus.lower().split()
-vocab = list(set(words))
-word_to_idx = {word: idx for idx, word in enumerate(vocab)}
+words = [w.strip(string.punctuation) for w in words]
+words = [w for w in words if w]word_to_idx = {word: idx for idx, word in enumerate(vocab)}
 idx_to_word = {idx: word for word, idx in word_to_idx.items()}
 corpus_indices = [word_to_idx[word] for word in words]
 # markov bs i hate classes AAAAAAAAA
@@ -54,6 +55,11 @@ class MarkovBot:
                 self.trigram[key] = {}
             self.trigram[key][w3] = self.trigram[key].get(w3, 0) + 1
     # do stuff with corpus i don't remember i kinda got lost in the code and forgot to comment
+    def stutter(word):
+        if len(word) < 2:
+            return word
+        first = word[0]
+        return f"{first}-{word}"
     def next_word(self, w1, w2):
         key = (self.word_to_idx[w1], self.word_to_idx[w2])
         # trigram
@@ -81,8 +87,29 @@ class MarkovBot:
                 nxt = rnd.choice(prompt_words)
             sentence.append(nxt)
             w1, w2 = w2, nxt
-        return " ".join(sentence)
-    # this is called when the command is used. ex !speak hi how are you
+        result = []
+        for w in sentence:
+            clean = w.strip(".,!?")
+            if rnd.random() < 0.015:
+                result.append(stutter(clean))
+            else:
+                result.append(clean)
+        sentence = " ".join(result)
+        # always end sentence properly
+        if not sentence.endswith((".", "!", "?")):
+            sentence += rnd.choice([".", ".", ".", "!", "?"])
+        words = sentence.split()
+        new_words = []
+        for i, w in enumerate(words):
+            if i > 2 and rnd.random() < 0.08:
+                new_words.append(w + ",")
+            else:
+                new_words.append(w)
+        sentence = " ".join(new_words)
+        if len(result) > 12:
+            sentence += "."
+        return sentence    
+# this is called when the command is used. ex !speak hi how are you
     def reply(self, message_text):
         words = message_text.lower().split()
         prompt_words = [w for w in words if w in self.vocab]

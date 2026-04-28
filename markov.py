@@ -143,7 +143,7 @@ class MarkovBot:
         words = text.split()
         new_words = []
         for i, w in enumerate(words):
-            if i > 2 and rnd.random() < 0.08:
+            if i > 2 and rnd.random() < 0.09:
                 new_words.append(w + ",")
             else:
                 new_words.append(w)

@@ -13,22 +13,43 @@ class MarkovBot:
         for i in range(len(self.corpus) - 1):
             w1 = self.corpus[i]
             w2 = self.corpus[i + 1]
-            self.bigram.setdefault(w1, []).append(w2)
+            if w1 not in self.bigram:
+                self.bigram[w1] = {}
+            self.bigram[w1][w2] = self.bigram[w1].get(w2, 0) + 1
         for i in range(len(self.corpus) - 2):
             w1 = self.corpus[i]
             w2 = self.corpus[i + 1]
             w3 = self.corpus[i + 2]
-            self.trigram.setdefault((w1, w2), []).append(w3)
+            key = (w1, w2)
+            if key not in self.trigram:
+                self.trigram[key] = {}
+            self.trigram[key][w3] = self.trigram[key].get(w3, 0) + 1
+        # convert to fast sampling tables
+        for k, v in self.bigram.items():
+            items = list(v.keys())
+            weights = list(v.values())
+            self.bigram[k] = (items, weights)
+        for k, v in self.trigram.items():
+            items = list(v.keys())
+            weights = list(v.values())
+            self.trigram[k] = (items, weights)
     def stutter(self, word):
         if len(word) < 2:
             return word
         return f"{word[0]}-{word}"
+    def sample(self, table):
+        items, weights = table
+        return rnd.choices(items, weights=weights, k=1)[0]
     def next_word(self, w1, w2):
         key = (self.word_to_idx[w1], self.word_to_idx[w2])
         if key in self.trigram:
-            return self.idx_to_word[rnd.choice(self.trigram[key])]
+            return self.idx_to_word[
+                self.sample(self.trigram[key])
+            ]
         if self.word_to_idx[w2] in self.bigram:
-            return self.idx_to_word[rnd.choice(self.bigram[self.word_to_idx[w2]])]
+            return self.idx_to_word[
+                self.sample(self.bigram[self.word_to_idx[w2]])
+            ]
         return rnd.choice(self.vocab)
     def generate(self, w1, w2, length=10, prompt_words=None):
         sentence = [w1, w2]

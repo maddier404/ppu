@@ -1,4 +1,3 @@
-
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
@@ -69,6 +68,8 @@ def create_bot(markov, token, prefix, keep_alive):
     async def specs(ctx):
         await ctx.send("ppu specs:\nclock speed: 1hz\nsilliness: off the freacking charts")
     @bot.command(name="speak")
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.cooldown(1, 1, commands.BucketType.channel)
     async def speak(ctx):
         response = markov.reply(ctx.message.content)
         await ctx.send(response)

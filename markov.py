@@ -55,7 +55,7 @@ class MarkovBot:
                 self.sample(self.bigram[self.word_to_idx[w2]])
             ]
         return rnd.choice(self.vocab)
-    def score(self, prev, candidate, recent):
+    def score(self, prev, candidate, recent, prompt_words, topic_strength):
         score = 0
         # penalize repetition
         if candidate == prev:
@@ -66,26 +66,31 @@ class MarkovBot:
         # small bonus for common English words (from vocab frequency proxy)
         if candidate in self.vocab_set:
             score += 1
+        if candidate in prompt_words:
+            score += 3 * topic_strength
         # mild preference for shorter words (keeps flow less noisy)
-        score += max(0, 5 - len(candidate)) * 0.1
+        score += max(0, 5 - len(candidate)) * 0.05
         return score
     def generate(self, w1, w2, length=10, prompt_words=None):
         sentence = [w1, w2]
         recent = []
-        for _ in range(length):
+        for step in range(length):
+            topic_strength = (1.0 - step / length) ** 2
             candidates = self.next_candidates(w1, w2, k=8)
-            scores = [self.score(w2, c, recent) for c in candidates]
+            scores = [self.score(w2, c, recent, prompt_words, topic_strength) for c in candidates]
             # stabilize scores so negatives don't explode
             max_s = max(scores)
             exp_scores = np.exp(np.array(scores) - max_s)
             # convert to probabilities
-            if exp_scores.sum() == 0:
-                probs = np.ones(len(exp_scores)) / len(exp_scores)
-            else:
-                probs = exp_scores / exp_scores.sum()
+            probs = exp_scores / exp_scores.sum() if exp_scores.sum() != 0 else np.ones(len(exp_scores)) / len(exp_scores)
             nxt = rnd.choices(candidates, weights=probs, k=1)[0]
-            if prompt_words and rnd.random() < 0.2:
-                nxt = rnd.choice(prompt_words)
+            candidates = self.next_candidates(w1, w2, k=8)
+            weights = []
+            for c in candidates:
+                base = self.score(w2, c, recent, prompt_words)
+                if c in prompt_words:
+                    base += 2
+                weights.append(base)
             sentence.append(nxt)
             recent.append(nxt)
             if len(recent) > 5:
@@ -114,9 +119,12 @@ class MarkovBot:
         return text
     def reply(self, message_text):
         words = message_text.lower().split()
-        prompt_words = [w for w in words if w in self.vocab_set]
+        prompt_words = [w for w in words if w in self.vocab_set and w not in STOPWORDS]
         if len(prompt_words) >= 2:
-            w1, w2 = rnd.sample(prompt_words, 2)
+            pairs = [(words[i], words[i+1]) for i in range(len(words)-1)
+                if words[i] in self.vocab_set and words[i+1] in self.vocab_set]
+        if pairs:
+            w1, w2 = rnd.choice(pairs)
         else:
             w1 = rnd.choice(config.STARTERS)
             w2 = rnd.choice(self.vocab)

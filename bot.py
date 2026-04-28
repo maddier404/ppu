@@ -42,7 +42,7 @@ def create_bot(markov, token, prefix, keep_alive):
         if message.author == bot.user:
             return
         user_memory[message.author.id] = message.content.lower()
-        if any(x in message.content.lower() == "ppu") and not message.content.startswith(prefix):
+        if any("ppu" in message.content.lower()) and not message.content.startswith(prefix):
             await message.channel.send("that's me!")
         await bot.process_commands(message)
     @bot.command(name="ppu")

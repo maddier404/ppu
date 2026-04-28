@@ -25,7 +25,7 @@ class MarkovBot:
                     current_sentence.append(word)
             return sentences
         def next_candidates(self, w1, w2, k=5):
-        return list({self.next_word(w1, w2) for _ in range(k)})
+            return list({self.next_word(w1, w2) for _ in range(k)})
     def build_models(self):
         for i in range(len(self.corpus) - 1):
             w1 = self.corpus[i]

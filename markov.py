@@ -11,8 +11,20 @@ class MarkovBot:
         self.trigram = {}
         self.bigram = {}
         self.build_models()
-        self.sentences
-    def next_candidates(self, w1, w2, k=5):
+        self.sentences = self.generate_sentences(corpus_indices)
+        def generate_sentences(self, corpus_indices):
+            sentences = []
+            current_sentence = []
+            for idx in corpus_indices:
+                word = self.idx_to_word[idx]
+                if word in {".", "!", "?"}:
+                    if current_sentence:
+                        sentences.append(current_sentence)
+                    current_sentence = []
+                else:
+                    current_sentence.append(word)
+            return sentences
+        def next_candidates(self, w1, w2, k=5):
         return list({self.next_word(w1, w2) for _ in range(k)})
     def build_models(self):
         for i in range(len(self.corpus) - 1):
@@ -52,8 +64,6 @@ class MarkovBot:
                 best_sentences.append(sent)
         if best_sentences:
             return rnd.choice(best_sentences)
-        if w not in config.STOPWORDS:
-            score += 1.0 / (1 + len(self.vocab_set) * 0.0001)
         return None
     def stutter(self, word):
         if len(word) < 2:
@@ -100,51 +110,42 @@ class MarkovBot:
         score += max(0, 5 - len(candidate)) * 0.05
         return score
     def generate(self, w1, w2, length=10, prompt_words=None):
-        sentence = [w1, w2]
-        recent = []
-        for step in range(length):
-            topic_strength = (1.0 - step / length) ** 2
-            candidates = self.next_candidates(w1, w2, k=8)
-            scores = [self.score(w2, c, recent, prompt_words, topic_strength) for c in candidates]
-            # stabilize scores so negatives don't explode
-            max_s = max(scores)
-            exp_scores = np.exp(np.array(scores) - max_s)
-            # convert to probabilities
-            probs = exp_scores / exp_scores.sum() if exp_scores.sum() != 0 else np.ones(len(exp_scores)) / len(exp_scores)
-            nxt = rnd.choices(candidates, weights=probs, k=1)[0]
-            candidates = self.next_candidates(w1, w2, k=8)
-            weights = []
-            for c in candidates:
-                base = self.score(w2, c, recent, prompt_words)
-                if c in prompt_words:
-                    base += 2
-                weights.append(base)
-            sentence.append(nxt)
-            recent.append(nxt)
-            if len(recent) > 5:
-                recent.pop(0)
-            w1, w2 = w2, nxt
-        result = []
-        for w in sentence:
-            clean = w.strip(".,!?")
-            if rnd.random() < 0.015:
-                result.append(self.stutter(clean))
-            else:
-                result.append(clean)
-        text = " ".join(result)
-        if not text.endswith((".", "!", "?")):
-            text += rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
-        words = text.split()
-        new_words = []
-        for i, w in enumerate(words):
-            if i > 2 and rnd.random() < 0.08:
-                new_words.append(w + ",")
-            else:
-                new_words.append(w)
-        text = " ".join(new_words)
-        if len(result) > 12:
-            text += "."
-        return text
+    sentence = [w1, w2]
+    recent = []
+    for step in range(length):
+        topic_strength = (1.0 - step / length) ** 2
+        candidates = self.next_candidates(w1, w2, k=8)
+        scores = [self.score(w2, c, recent, prompt_words, topic_strength) for c in candidates]
+        max_s = max(scores)
+        exp_scores = np.exp(np.array(scores) - max_s)
+        probs = exp_scores / exp_scores.sum() if exp_scores.sum() != 0 else np.ones(len(exp_scores)) / len(exp_scores)
+        nxt = rnd.choices(candidates, weights=probs, k=1)[0]
+        sentence.append(nxt)
+        recent.append(nxt)
+        if len(recent) > 5:
+            recent.pop(0)
+        w1, w2 = w2, nxt
+    result = []
+    for w in sentence:
+        clean = w.strip(".,!?")
+        if rnd.random() < 0.015:
+            result.append(self.stutter(clean))
+        else:
+            result.append(clean)
+    text = " ".join(result)
+    if not text.endswith((".", "!", "?")):
+        text += rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
+    words = text.split()
+    new_words = []
+    for i, w in enumerate(words):
+        if i > 2 and rnd.random() < 0.08:
+            new_words.append(w + ",")
+        else:
+            new_words.append(w)
+    text = " ".join(new_words)
+    if len(result) > 12:
+        text += "."
+    return text
     def reply(self, message_text):
         words = message_text.lower().split()
         # filter prompt words

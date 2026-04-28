@@ -182,6 +182,6 @@ class MarkovBot:
         return self.generate(
             w1,
             w2,
-            length = random.choices(lengths, weights=weights, k=1)[0],
+            length = rnd.choices(lengths, weights=weights, k=1)[0],
             prompt_words=prompt_words
         )

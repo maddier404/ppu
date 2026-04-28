@@ -20,5 +20,5 @@ def load_corpus(path="corpus.txt"):
         if len(tokens) >= 2:
             sentences.append(tokens)
     print("CORPUS LOADED", len(corpus_indices))
-    print("SENTENCES:" len(sentences))
+    print("SENTENCES:", len(sentences))
     return corpus_indices, vocab, word_to_idx, idx_to_word, file_path.exists()

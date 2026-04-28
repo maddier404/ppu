@@ -120,6 +120,8 @@ class MarkovBot:
     def reply(self, message_text):
         words = message_text.lower().split()
         prompt_words = [w for w in words if w in self.vocab_set and w not in config.STOPWORDS]
+        if len(prompt_words) < 3:
+            prompt_words = [w for w in words if w in self.vocab_set]
         if len(prompt_words) >= 2:
             pairs = [(words[i], words[i+1]) for i in range(len(words)-1)
                 if words[i] in self.vocab_set and words[i+1] in self.vocab_set]

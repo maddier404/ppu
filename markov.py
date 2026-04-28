@@ -175,9 +175,13 @@ class MarkovBot:
             else:
                 w1 = rnd.choice(config.STARTERS)
                 w2 = rnd.choice(self.vocab)
+        min_length = 3
+        max_length = 30
+        lengths = list(range(min_length, max_length + 1))
+        weights = [max_length - i + min_length for i in lengths]
         return self.generate(
             w1,
             w2,
-            length=rnd.randint(7, 20),
+            length = random.choices(lengths, weights=weights, k=1)[0],
             prompt_words=prompt_words
         )

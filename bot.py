@@ -5,6 +5,9 @@ import corpus
 import random as rnd
 def create_bot(markov, token, prefix, keep_alive):
     bot = commands.Bot(command_prefix=prefix, intents=discord.Intents.all())
+    corpus_indices, vocab, word_to_idx, idx_to_word, corpus_exists = corpus.load_corpus()
+    if not corpus_exists:
+        raise FileNotFoundError("Corpus file 'corpus.txt' not found!")
     user_memory = {}
     latency_history = []
     async def paginate_vocabulary(ctx, vocab_list, page=1):

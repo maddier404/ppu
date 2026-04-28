@@ -23,6 +23,7 @@ def keep_alive():
 # get corpus and vocab
 file_path = Path('corpus.txt')
 corpus = file_path.read_text()
+print("corpus exists: ", file_path.exists())
 words = corpus.lower().split()
 words = [w.strip(string.punctuation) for w in words]
 words = [w for w in words if w]
@@ -158,7 +159,7 @@ async def help(ctx):
     await ctx.send("help\nprefix is !\ncommands:\n-help\n-corpus\n-ppu\n-specs\n-speak\n-pronouns")
 # ===
 try:
-    keep_alive()
+    #keep_alive()
     bot.run(DISCORD_TOKEN)
 except Exception as e:
     print("CRASH:", e)

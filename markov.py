@@ -135,6 +135,8 @@ class MarkovBot:
         text = " ".join(result)
         if not text.endswith((".", "!", "?")):
             text += rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
+        if text.endswith((".", "!", "?")):
+            text = text.rstrip(".,!?") + rnd.choices([".", "!", "?"], weights=[3,1,1])[0]
         words = text.split()
         new_words = []
         for i, w in enumerate(words):
@@ -146,7 +148,6 @@ class MarkovBot:
         if len(result) > 12:
             text += "."
         return text
-    
     def reply(self, message_text):
         words = message_text.lower().split()
         # filter prompt words

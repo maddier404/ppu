@@ -1,5 +1,6 @@
 import random as rnd
 import config
+import numpy as np
 class MarkovBot:
     def __init__(self, corpus_indices, idx_to_word, word_to_idx, vocab):
         self.corpus = corpus_indices
@@ -80,8 +81,8 @@ class MarkovBot:
             # convert to probabilities
             probs = exp_scores / exp_scores.sum()
             nxt = rnd.choices(candidates, weights=probs, k=1)[0]
-                        if prompt_words and rnd.random() < 0.2:
-                            nxt = rnd.choice(prompt_words)
+            if prompt_words and rnd.random() < 0.2:
+                nxt = rnd.choice(prompt_words)
             sentence.append(nxt)
             recent.append(nxt)
             if len(recent) > 5:

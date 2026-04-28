@@ -29,22 +29,24 @@ idx_to_word = {idx: word for word, idx in word_to_idx.items()}
 # convert words in corpus to index
 corpus_indices = [word_to_idx[word] for word in words]
 # init bigram counts matrix
-bigram_counts = np.zeros((vocab_size, vocab_size))
+trigram_counts = np.zeros((vocab_size, vocab_size, vocab_size))
 # count occurrences of each bigram in corpus
-for i in range(len(corpus_indices) - 1):
-    current_word = corpus_indices[i]
-    next_word = corpus_indices[i+1]
-    bigram_counts[current_word, next_word] += 1
+for i in range(len(corpus_indices) - 2):
+    w1 = corpus_indices[i]
+    w2 = corpus_indices[i + 1]
+    w3 = corpus_indices[i + 2]
+    trigram_counts[w1, w2, w3] += 1
 # laplace smoothing
-bigram_counts += 0.01
+trigram_counts += 0.01
 # normalize counts to get probabilities
-bigram_probabilities = bigram_counts / bigram_counts.sum(axis=1, keepdims=True)
+trigram_probabilities = trigram_counts / trigram_counts.sum(axis=2, keepdims=True)
 #print("Bigrams probabilities matrix: ", bigram_probabilities)
-def predict_next_word(current_word, bigram_probabilities):
-    word_idx = word_to_idx[current_word]
-    next_word_probs = bigram_probabilities[word_idx]
-    next_word_idx = np.random.choice(range(vocab_size), p=next_word_probs)
-    return idx_to_word[next_word_idx]
+def predict_next_word(w1, w2):
+    idx1 = word_to_idx[w1]
+    idx2 = word_to_idx[w2]
+    probs = trigram_probabilities[idx1, idx2]
+    next_idx = np.random.choice(range(vocab_size), p=probs)
+    return idx_to_word[next_idx]
 # Test the model with a word
 #current_word = "ai"
 #next_word = predict_next_word(current_word, bigram_probabilities)

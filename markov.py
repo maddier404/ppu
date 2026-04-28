@@ -135,8 +135,8 @@ class MarkovBot:
         text = " ".join(result)
         if not text.endswith((".", "!", "?")):
             text += rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
-        if text.endswith((".", "!", "?")):
-            text = text.rstrip(".,!?") + rnd.choices([".", "!", "?"], weights=[3,1,1])[0]
+        else:
+            text = text.rstrip(".,!?") + rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
         words = text.split()
         new_words = []
         for i, w in enumerate(words):

@@ -1,4 +1,5 @@
 import random as rnd
+from config import STARTERS
 class MarkovBot:
     def __init__(self, corpus_indices, idx_to_word, word_to_idx, vocab):
         self.corpus = corpus_indices
@@ -85,7 +86,10 @@ class MarkovBot:
         prompt_words = [w for w in words if w in self.vocab_set]
         if len(prompt_words) >= 2:
             w1 = rnd.choice(prompt_words)
-            w2 = rnd.choice(prompt_words)
         else:
-            w1, w2 = rnd.choice(self.vocab), rnd.choice(self.vocab)
+            import config
+            w1 = rnd.choice(config.STARTERS)
+            w2 = rnd.choice(self.vocab)
+        if len(prompt_words) >= 2:
+            w2 = rnd.choice(prompt_words)
         return self.generate(w1, w2, length=rnd.randint(7, 20), prompt_words=prompt_words)

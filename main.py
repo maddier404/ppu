@@ -7,8 +7,9 @@ def home():
 def run():
     app.run(host='0.0.0.0', port=8080)
 def keep_alive():
-    t = Thread(target=run)
-    t.start()
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        t = Thread(target=run)
+        t.start()
 
 import numpy as np
 import random as rnd

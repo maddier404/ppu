@@ -28,14 +28,17 @@ word_to_idx = {word: idx for idx, word in enumerate(vocab)}
 idx_to_word = {idx: word for word, idx in word_to_idx.items()}
 # convert words in corpus to index
 corpus_indices = [word_to_idx[word] for word in words]
-# init bigram counts matrix
-trigram_counts = np.zeros((vocab_size, vocab_size, vocab_size))
+# init bigram counts matrix. no, trigram
+trigram_counts = {}
 # count occurrences of each bigram in corpus
 for i in range(len(corpus_indices) - 2):
     w1 = corpus_indices[i]
     w2 = corpus_indices[i + 1]
     w3 = corpus_indices[i + 2]
-    trigram_counts[w1, w2, w3] += 1
+    key = (w1, w2)
+    if key not in trigram_counts:
+        trigram_counts[key] = {}
+    trigram_counts[key][w3] = trigram_counts[key].get(w3, 0) + 1
 # laplace smoothing
 trigram_counts += 0.01
 # normalize counts to get probabilities

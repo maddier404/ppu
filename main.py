@@ -79,6 +79,7 @@ async def on_ready():
         print(f"- {guild.id} (name: {guild.name})")
         guild_count = guild_count + 1
     print("ppu is in " + str(guild_count) + "guilds")
+@bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
@@ -98,9 +99,9 @@ async def speak(ctx):
 @bot.command(name="pronouns")
 async def pronouns(ctx):
     await ctx.send("my pronouns are it/she! i'm bot!")
-@bot.command(name="corpus")
-async def corpus(ctx):
-    await ctx.send(file_path.read_text())
+#@bot.command(name="corpus")
+#async def corpus(ctx):
+#    await ctx.send(file_path.read_text())
 # ==============================================================
 bot.remove_command("help")
 @bot.command(name="help")

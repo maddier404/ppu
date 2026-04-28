@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from corpus import vocab
+import corpus
 def create_bot(markov, token, prefix, keep_alive):
     bot = commands.Bot(command_prefix=prefix, intents=discord.Intents.all())
     user_memory = {}
@@ -48,10 +48,10 @@ def create_bot(markov, token, prefix, keep_alive):
         await ctx.send("my pronouns are it/she! i'm bot!")
     @bot.command(name="vlist")
     async def vlist(ctx):
-        await ctx.send("my vocabulary is:\n", vocab)
+        await ctx.send("my vocabulary is:\n", corpus.vocab)
     @bot.command(name="vlength")
     async def vlength(ctx):
-        await ctx.send(f"my vocabulary is {len(vocab)} words long")
+        await ctx.send(f"my vocabulary is {len(corpus.vocab)} words long")
     bot.remove_command("help")
     @bot.command(name="help")
     async def help_cmd(ctx):

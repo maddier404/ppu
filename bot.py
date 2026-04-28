@@ -1,13 +1,14 @@
+
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-import corpus
 import random as rnd
+import corpus
 def create_bot(markov, token, prefix, keep_alive):
-    bot = commands.Bot(command_prefix=prefix, intents=discord.Intents.all())
     corpus_indices, vocab, word_to_idx, idx_to_word, corpus_exists = corpus.load_corpus()
     if not corpus_exists:
         raise FileNotFoundError("Corpus file 'corpus.txt' not found!")
+    bot = commands.Bot(command_prefix=prefix, intents=discord.Intents.all())
     user_memory = {}
     latency_history = []
     async def paginate_vocabulary(ctx, vocab_list, page=1):
@@ -76,16 +77,10 @@ def create_bot(markov, token, prefix, keep_alive):
         await ctx.send("my pronouns are it/she! i'm bot!")
     @bot.command(name="vlist")
     async def vlist(ctx):
-        print("vlist command triggered")
-        vocab_list = corpus.vocab
-        print(vocab_list)  # Debugging line
-        if vocab_list:
-            await paginate_vocabulary(ctx, vocab_list, page=1)
-        else:
-            await ctx.send("The vocabulary list is empty.")
+        await paginate_vocabulary(ctx, vocab, page=1)
     @bot.command(name="vlength")
     async def vlength(ctx):
-        vocab_length = len(corpus.vocab)
+        vocab_length = len(vocab)
         await ctx.send(f"my vocabulary is {vocab_length} words long")
     bot.remove_command("help")
     @bot.command(name="help")

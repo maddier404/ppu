@@ -30,7 +30,10 @@ try:
     words = [w for w in words if w]
     word_to_idx = {word: idx for idx, word in enumerate(vocab)}
     idx_to_word = {idx: word for word, idx in word_to_idx.items()}
-    corpus_indices = [word_to_idx[word] for word in words]
+    for word in words:
+        if word in word_to_idx:
+            corpus_indices.append(word_to_idx[word])
+    print("CORPUS LOADED", len(words))
     # markov bs i hate classes AAAAAAAAA
     class MarkovBot:
         def __init__(self, corpus_indices, idx_to_word, word_to_idx, vocab):

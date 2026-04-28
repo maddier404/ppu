@@ -57,7 +57,6 @@ def generate_sentence(start_word, bigram_probabilities, length=5):
         sentence.append(next_word)
         current_word = next_word
     return ' '.join(sentence)
-length = rnd.randint(7, 20)
 # for i in range(1):
     # generated_sentence=generate_sentence("maddie", bigram_probabilities, length=length)
     # print(generated_sentence)
@@ -97,6 +96,7 @@ async def specs(ctx):
 async def speak(ctx):
     strt_word = rnd.choice(words)
     print("start word:", strt_word)
+    length = rnd.randint(7, 20)
     generated_sentence=generate_sentence(strt_word, bigram_probabilities, length=length)
     await ctx.send(generated_sentence)
 @bot.command(name="pronouns")

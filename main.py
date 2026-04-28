@@ -39,28 +39,37 @@ for i in range(len(corpus_indices) - 2):
     if key not in trigram_counts:
         trigram_counts[key] = {}
     trigram_counts[key][w3] = trigram_counts[key].get(w3, 0) + 1
-# laplace smoothing
-trigram_counts += 0.01
+trigram_probs = {}
+for key, next_words in trigram_counts.items():
+    total = sum(next_words.values()) + 0.01 * len(vocab)
+    trigram_probs[key] = {
+        word: (count + 0.01) / total
+        for word, count in next_words.items()
+    }
 # normalize counts to get probabilities
-trigram_probabilities = trigram_counts / trigram_counts.sum(axis=2, keepdims=True)
+#trigram_probabilities = trigram_counts / trigram_counts.sum(axis=2, keepdims=True)
 #print("Bigrams probabilities matrix: ", bigram_probabilities)
 def predict_next_word(w1, w2):
-    idx1 = word_to_idx[w1]
-    idx2 = word_to_idx[w2]
-    probs = trigram_probabilities[idx1, idx2]
-    next_idx = np.random.choice(range(vocab_size), p=probs)
+    key = (word_to_idx[w1], word_to_idx[w2])
+    if key not in trigram_probs:
+        return rnd.choice(vocab)
+    next_words = trigram_probs[key]
+    words = list(next_words.keys())
+    probs = list(next_words.values())
+    next_idx = np.random.choice(words, p=probs)
     return idx_to_word[next_idx]
 # Test the model with a word
 #current_word = "ai"
 #next_word = predict_next_word(current_word, bigram_probabilities)
 #print(f"Given '{current_word}', the model predicts '{next_word}'.")
-def generate_sentence(start_word, bigram_probabilities, length=5):
-    sentence = [start_word]
-    current_word = start_word
+def generate_sentence(w1, w2, length=5):
+    sentence = [w1, w2]
+    current_w1, current_w2 = w1, w2
     for _ in range(length):
-        next_word = predict_next_word(current_word, bigram_probabilities)
+        next_word = predict_next_word(current_w1, current_w2)
         sentence.append(next_word)
-        current_word = next_word
+        current_w1 = current_w2
+        current_w2 = next_word
     return ' '.join(sentence)
 # for i in range(1):
     # generated_sentence=generate_sentence("maddie", bigram_probabilities, length=length)
@@ -99,10 +108,10 @@ async def specs(ctx):
     await ctx.send(f"ppu specs: \nclock speed: 1hz\nsilliness: off the freacking charts")
 @bot.command(name="speak")
 async def speak(ctx):
-    strt_word = rnd.choice(words)
-    print("start word:", strt_word)
+    w1 = rnd.choice(vocab)
+    w2 = rnd.choice(vocab)
     length = rnd.randint(7, 20)
-    generated_sentence=generate_sentence(strt_word, bigram_probabilities, length=length)
+    generated_sentence = generate_sentence(w1, w2, length=length)
     await ctx.send(generated_sentence)
 @bot.command(name="pronouns")
 async def pronouns(ctx):

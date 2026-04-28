@@ -11,6 +11,7 @@ class MarkovBot:
         self.trigram = {}
         self.bigram = {}
         self.build_models()
+        self.sentences
     def next_candidates(self, w1, w2, k=5):
         return list({self.next_word(w1, w2) for _ in range(k)})
     def build_models(self):
@@ -37,6 +38,23 @@ class MarkovBot:
             items = list(v.keys())
             weights = list(v.values())
             self.trigram[k] = (items, weights)
+    def find_relevant_sentence(self, prompt_words):
+        if not prompt_words:
+            return None
+        best_score = 0
+        best_sentences = []
+        for sent in self.sentences:
+            score = self.weighted_overlap(prompt_words, sent)
+            if score > best_score:
+                best_score = score
+                best_sentences = [sent]
+            elif score == best_score and score > 0:
+                best_sentences.append(sent)
+        if best_sentences:
+            return rnd.choice(best_sentences)
+        if w not in config.STOPWORDS:
+            score += 1.0 / (1 + len(self.vocab_set) * 0.0001)
+        return None
     def stutter(self, word):
         if len(word) < 2:
             return word
@@ -55,6 +73,16 @@ class MarkovBot:
                 self.sample(self.bigram[self.word_to_idx[w2]])
             ]
         return rnd.choice(self.vocab)
+    def weighted_overlap(self, prompt_words, sentence):
+        score = 0
+        sentence_set = set(sentence)
+        for w in prompt_words:
+            if w in sentence_set:
+                if w in config.STOPWORDS:
+                    score += 0.5   # weak signal
+                else:
+                    score += 2.0   # strong signal
+        return score
     def score(self, prev, candidate, recent, prompt_words, topic_strength):
         score = 0
         # penalize repetition
@@ -119,17 +147,28 @@ class MarkovBot:
         return text
     def reply(self, message_text):
         words = message_text.lower().split()
-        prompt_words = [w for w in words if w in self.vocab_set and w not in config.STOPWORDS]
+        # filter prompt words
+        prompt_words = [
+            w for w in words
+            if w in self.vocab_set and w not in config.STOPWORDS
+        ]
         if len(prompt_words) < 3:
             prompt_words = [w for w in words if w in self.vocab_set]
-        if len(prompt_words) >= 2:
-            pairs = [(words[i], words[i+1]) for i in range(len(words)-1)
-                if words[i] in self.vocab_set and words[i+1] in self.vocab_set]
-        if pairs:
-            w1, w2 = rnd.choice(pairs)
+        seed_sentence = self.find_relevant_sentence(prompt_words)
+        if seed_sentence:
+            i = rnd.randint(0, len(seed_sentence) - 2)
+            w1, w2 = seed_sentence[i], seed_sentence[i+1]
         else:
-            w1 = rnd.choice(config.STARTERS)
-            w2 = rnd.choice(self.vocab)
+            pairs = [
+                (words[i], words[i+1])
+                for i in range(len(words) - 1)
+                if words[i] in self.vocab_set and words[i+1] in self.vocab_set
+            ]
+            if pairs:
+                w1, w2 = rnd.choice(pairs)
+            else:
+                w1 = rnd.choice(config.STARTERS)
+                w2 = rnd.choice(self.vocab)
         return self.generate(
             w1,
             w2,

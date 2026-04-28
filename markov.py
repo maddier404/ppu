@@ -125,6 +125,8 @@ class MarkovBot:
             if len(recent) > 5:
                 recent.pop(0)
             w1, w2 = w2, nxt
+            if len(sentence) > 2 and sentence[-1] in {".", "!", "?"}:
+                break
         result = []
         for w in sentence:
             clean = w.strip(".,!?")

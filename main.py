@@ -96,6 +96,7 @@ async def specs(ctx):
 @bot.command(name="speak")
 async def speak(ctx):
     strt_word = rnd.choice(words)
+    print("start word: "strt_word)
     generated_sentence=generate_sentence(strt_word, bigram_probabilities, length=length)
     await ctx.send(generated_sentence)
 @bot.command(name="pronouns")

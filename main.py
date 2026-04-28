@@ -158,8 +158,16 @@ bot.remove_command("help")
 async def help(ctx):
     await ctx.send("help\nprefix is !\ncommands:\n-help\n-corpus\n-ppu\n-specs\n-speak\n-pronouns")
 # ===
+#try:
+#    #keep_alive()
+#    bot.run(DISCORD_TOKEN)
+#except Exception as e:
+#    print("CRASH:", e)
 try:
-    #keep_alive()
+    print("Starting bot...")
+    print("Token loaded:", bool(DISCORD_TOKEN))
+    print("Corpus exists:", file_path.exists())
+    keep_alive()
     bot.run(DISCORD_TOKEN)
 except Exception as e:
-    print("CRASH:", e)
+    print("CRASH:", repr(e))

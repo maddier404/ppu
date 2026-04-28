@@ -1,5 +1,5 @@
 import random as rnd
-from config import STARTERS
+import config
 class MarkovBot:
     def __init__(self, corpus_indices, idx_to_word, word_to_idx, vocab):
         self.corpus = corpus_indices
@@ -10,6 +10,8 @@ class MarkovBot:
         self.trigram = {}
         self.bigram = {}
         self.build_models()
+    def next_candidates(self, w1, w2, k=5):
+        return list({self.next_word(w1, w2) for _ in range(k)})
     def build_models(self):
         for i in range(len(self.corpus) - 1):
             w1 = self.corpus[i]
@@ -52,13 +54,38 @@ class MarkovBot:
                 self.sample(self.bigram[self.word_to_idx[w2]])
             ]
         return rnd.choice(self.vocab)
+    def score(self, prev, candidate, recent):
+        score = 0
+        # penalize repetition
+        if candidate == prev:
+            score -= 5
+        # penalize repeating recent words
+        if candidate in recent:
+            score -= 2
+        # small bonus for common English words (from vocab frequency proxy)
+        if candidate in self.vocab_set:
+            score += 1
+        # mild preference for shorter words (keeps flow less noisy)
+        score += max(0, 5 - len(candidate)) * 0.1
+        return score
     def generate(self, w1, w2, length=10, prompt_words=None):
         sentence = [w1, w2]
+        recent = []
         for _ in range(length):
-            nxt = self.next_word(w1, w2)
-            if prompt_words and rnd.random() < 0.2:
-                nxt = rnd.choice(prompt_words)
+            candidates = self.next_candidates(w1, w2, k=8)
+            scores = [self.score(w2, c, recent) for c in candidates]
+            # stabilize scores so negatives don't explode
+            max_s = max(scores)
+            exp_scores = np.exp(np.array(scores) - max_s)
+            # convert to probabilities
+            probs = exp_scores / exp_scores.sum()
+            nxt = rnd.choices(candidates, weights=probs, k=1)[0]
+                        if prompt_words and rnd.random() < 0.2:
+                            nxt = rnd.choice(prompt_words)
             sentence.append(nxt)
+            recent.append(nxt)
+            if len(recent) > 5:
+                recent.pop(0)
             w1, w2 = w2, nxt
         result = []
         for w in sentence:

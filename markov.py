@@ -85,11 +85,13 @@ class MarkovBot:
         words = message_text.lower().split()
         prompt_words = [w for w in words if w in self.vocab_set]
         if len(prompt_words) >= 2:
-            w1 = rnd.choice(prompt_words)
+            w1, w2 = rnd.sample(prompt_words, 2)
         else:
-            import config
             w1 = rnd.choice(config.STARTERS)
             w2 = rnd.choice(self.vocab)
-        if len(prompt_words) >= 2:
-            w2 = rnd.choice(prompt_words)
-        return self.generate(w1, w2, length=rnd.randint(7, 20), prompt_words=prompt_words)
+        return self.generate(
+            w1,
+            w2,
+            length=rnd.randint(7, 20),
+            prompt_words=prompt_words
+        )

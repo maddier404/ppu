@@ -79,7 +79,10 @@ class MarkovBot:
             max_s = max(scores)
             exp_scores = np.exp(np.array(scores) - max_s)
             # convert to probabilities
-            probs = exp_scores / exp_scores.sum()
+            if exp_scores.sum() == 0:
+                probs = np.ones(len(exp_scores)) / len(exp_scores)
+            else:
+                probs = exp_scores / exp_scores.sum()
             nxt = rnd.choices(candidates, weights=probs, k=1)[0]
             if prompt_words and rnd.random() < 0.2:
                 nxt = rnd.choice(prompt_words)

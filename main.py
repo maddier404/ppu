@@ -52,7 +52,6 @@ def predict_next_word(current_word, bigram_probabilities):
 def generate_sentence(start_word, bigram_probabilities, length=5):
     sentence = [start_word]
     current_word = start_word
-    strt_word = rnd.choice(words)
     for _ in range(length):
         next_word = predict_next_word(current_word, bigram_probabilities)
         sentence.append(next_word)
@@ -85,9 +84,9 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-if message.content.lower() == "ppu" and not message.content.startswith("!"):
-    await message.channel.send(f"that's me!")
-    await bot.process_commands(message)
+    if message.content.lower() == "ppu" and not message.content.startswith("!"):
+        await message.channel.send(f"that's me!")
+        await bot.process_commands(message)
 @bot.command(name="ppu")
 async def ppu(ctx):
     await ctx.send(f"ppu latency: {round(bot.latency * 1000)}ms")
@@ -96,6 +95,7 @@ async def specs(ctx):
     await ctx.send(f"ppu specs: \nclock speed: 1hz\nsilliness: off the freacking charts")
 @bot.command(name="speak")
 async def speak(ctx):
+    strt_word = rnd.choice(words)
     generated_sentence=generate_sentence(strt_word, bigram_probabilities, length=length)
     await ctx.send(generated_sentence)
 @bot.command(name="pronouns")

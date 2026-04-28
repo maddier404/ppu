@@ -85,7 +85,7 @@ async def on_message(message):
         return
     if message.content.lower() == "ppu" and not message.content.startswith("!"):
         await message.channel.send(f"that's me!")
-        await bot.process_commands(message)
+    await bot.process_commands(message)
 @bot.command(name="ppu")
 async def ppu(ctx):
     await ctx.send(f"ppu latency: {round(bot.latency * 1000)}ms")

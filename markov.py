@@ -148,7 +148,7 @@ class MarkovBot:
             else:
                 new_words.append(w)
         text = " ".join(new_words)
-        if len(result) > 12:
+        if len(result) > 12 and not text.endswith("."):
             text += "."
         return text
     def reply(self, message_text):

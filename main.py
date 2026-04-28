@@ -29,13 +29,16 @@ try:
     words = [w.strip(string.punctuation) for w in words]
     words = [w for w in words if w]
     vocab = list(set(words))
+    vocab_set = set(vocab)
     word_to_idx = {word: idx for idx, word in enumerate(vocab)}
     idx_to_word = {idx: word for word, idx in word_to_idx.items()}
     corpus_indices = []
     for word in words:
         if word in word_to_idx:
             corpus_indices.append(word_to_idx[word])
-    print("CORPUS LOADED", len(words))
+    del words
+    del corpus
+    print("CORPUS LOADED", len(corpus_indices))
     # markov bs i hate classes AAAAAAAAA
     class MarkovBot:
         def __init__(self, corpus_indices, idx_to_word, word_to_idx, vocab):
@@ -43,6 +46,7 @@ try:
             self.idx_to_word = idx_to_word
             self.word_to_idx = word_to_idx
             self.vocab = vocab
+            self.vocab_set = set(vocab)
             self.trigram = {}
             self.bigram = {}
             self.build_models()
@@ -52,16 +56,16 @@ try:
                 w1 = self.corpus[i]
                 w2 = self.corpus[i + 1]
                 if w1 not in self.bigram:
-                    self.bigram[w1] = {}
-                self.bigram[w1][w2] = self.bigram[w1].get(w2, 0) + 1
+                    self.bigram[w1] = []
+                self.bigram[w1].append(w2)
             for i in range(len(self.corpus) - 2):
                 w1 = self.corpus[i]
                 w2 = self.corpus[i + 1]
                 w3 = self.corpus[i + 2]
                 key = (w1, w2)
                 if key not in self.trigram:
-                    self.trigram[key] = {}
-                self.trigram[key][w3] = self.trigram[key].get(w3, 0) + 1
+                    self.trigram[key] = []
+                self.trigram[key].append(w3)
         # do stuff with corpus i don't remember i kinda got lost in the code and forgot to comment
         def stutter(self, word):
             if len(word) < 2:
@@ -72,18 +76,10 @@ try:
             key = (self.word_to_idx[w1], self.word_to_idx[w2])
             # trigram
             if key in self.trigram:
-                options = self.trigram[key]
-                words = list(options.keys())
-                probs = list(options.values())
-                next_idx = np.random.choice(words, p=np.array(probs) / sum(probs))
-                return self.idx_to_word[next_idx]
+                return self.idx_to_word[rnd.choice(self.trigram[key])]
             # bigram fallback
             if self.word_to_idx[w2] in self.bigram:
-                options = self.bigram[self.word_to_idx[w2]]
-                words = list(options.keys())
-                probs = list(options.values())
-                next_idx = np.random.choice(words, p=np.array(probs) / sum(probs))
-                return self.idx_to_word[next_idx]
+                return self.idx_to_word[rnd.choice(self.bigram[self.word_to_idx[w2]])]
             # random fallback
             return rnd.choice(self.vocab)
         # make the text
@@ -119,11 +115,10 @@ try:
         # this is called when the command is used. ex !speak hi how are you
         def reply(self, message_text):
             words = message_text.lower().split()
-            prompt_words = [w for w in words if w in self.vocab]
+            prompt_words = [w for w in words if w in self.vocab_set]
             if len(prompt_words) >= 2:
-                weights = [words.count(w) for w in prompt_words]
-                w1 = rnd.choices(prompt_words, weights=weights)[0]
-                w2 = rnd.choices(prompt_words, weights=weights)[0]
+                w1 = rnd.choice(prompt_words)
+                w2 = rnd.choice(prompt_words)
             else:
                 w1, w2 = rnd.choice(self.vocab), rnd.choice(self.vocab)
             return self.generate(w1, w2, length=rnd.randint(7, 20), prompt_words=prompt_words)

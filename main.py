@@ -25,7 +25,8 @@ file_path = Path('corpus.txt')
 corpus = file_path.read_text()
 words = corpus.lower().split()
 words = [w.strip(string.punctuation) for w in words]
-words = [w for w in words if w]word_to_idx = {word: idx for idx, word in enumerate(vocab)}
+words = [w for w in words if w]
+word_to_idx = {word: idx for idx, word in enumerate(vocab)}
 idx_to_word = {idx: word for word, idx in word_to_idx.items()}
 corpus_indices = [word_to_idx[word] for word in words]
 # markov bs i hate classes AAAAAAAAA

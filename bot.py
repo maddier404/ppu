@@ -48,7 +48,7 @@ def create_bot(markov, token, prefix, keep_alive):
         await ctx.send("my pronouns are it/she! i'm bot!")
     @bot.command(name="vlist")
     async def vlist(ctx):
-        await ctx.send("my vocabulary is:\n" corpus.vocab)
+        await ctx.send("my vocabulary is:\n", corpus.vocab)
     @bot.command(name="vlength")
     async def vlength(ctx):
         await ctx.send(f"my vocabulary is {len(vocab)} words long"

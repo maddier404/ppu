@@ -91,7 +91,7 @@ class MarkovBot:
                 if w in config.STOPWORDS:
                     score += 0.5   # weak signal
                 else:
-                    score += 2.0   # strong signal
+                    score += 1.8   # strong signal
         return score
     def score(self, prev, candidate, recent, prompt_words, topic_strength):
         score = 0
@@ -101,7 +101,7 @@ class MarkovBot:
         # penalize repeating recent words
         if candidate in recent:
             score -= 2
-        # small bonus for common English words (from vocab frequency proxy)
+        # small bonus for common english words (from vocab frequency proxy)
         if candidate in self.vocab_set:
             score += 1
         if candidate in prompt_words:

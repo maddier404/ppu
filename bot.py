@@ -74,7 +74,11 @@ def create_bot(markov, token, prefix, keep_alive):
     @bot.command(name="vlist")
     async def vlist(ctx):
         vocab_list = corpus.vocab
-        await paginate_vocabulary(ctx, vocab_list, page=1)
+        print(vocab_list)  # Debugging line
+        if vocab_list:
+            await paginate_vocabulary(ctx, vocab_list, page=1)
+        else:
+            await ctx.send("The vocabulary list is empty.")
     @bot.command(name="vlength")
     async def vlength(ctx):
         vocab_length = len(corpus.vocab)

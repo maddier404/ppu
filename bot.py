@@ -88,14 +88,15 @@ def create_bot(markov, token, prefix, keep_alive):
         release = platform.release()
         python_version = platform.python_version()
             # send the thing 
-            await ctx.send(
-                f"ppu specs (container)\n"
-                f"os: {system} {release}\n"
-                f"python: {python_version}\n"
-                f"cpu cores: {cpu_cores}\n"
-                f"cpu usage: {cpu_percent}%\n"
-                f"ram: {used_mem}MB / {total_mem}MB\n"
-                f"disk: {used_disk}GB / {total_disk}GB")
+        await ctx.send(
+            f"ppu specs (container)\n"
+            f"os: {system} {release}\n"
+            f"python: {python_version}\n"
+            f"cpu cores: {cpu_cores}\n"
+            f"cpu usage: {cpu_percent}%\n"
+            f"ram: {used_mem}MB / {total_mem}MB\n"
+            f"disk: {used_disk}GB / {total_disk}GB"
+        )
     @bot.command(name="speak")
     @commands.cooldown(1, 1, commands.BucketType.user)
     @commands.cooldown(1, 1, commands.BucketType.channel)

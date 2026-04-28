@@ -106,7 +106,12 @@ class MarkovBot:
             score += 3 * topic_strength
         score += max(0, 5 - len(candidate)) * 0.05
         return score
-    def generate(self, w1, w2, length=10, prompt_words=None):
+    def add_punctuation(self, sentence):
+        if sentence.endswith(('who', 'what', 'where', 'why', 'how')):
+            return sentence + "?"
+        else:
+            return sentence + rnd.choices([".", "!", "?"], weights=[3, 1, 1])[0]
+    def generate(self, w1, w2, length=10, prompt_words=None, temperature=0.7):
         sentence = [w1, w2]
         recent = []
         w1_idx = self.word_to_idx.get(w1, None)
@@ -119,7 +124,7 @@ class MarkovBot:
             candidates = self.next_candidates(w1, w2, k=8)
             scores = [self.score(w2, c, recent, prompt_words, topic_strength) for c in candidates]
             max_s = max(scores)
-            exp_scores = np.exp(np.array(scores) - max_s)
+            exp_scores = np.exp(np.array(scores) - max_s) / temperature
             probs = exp_scores / exp_scores.sum() if exp_scores.sum() != 0 else np.ones(len(exp_scores)) / len(exp_scores)
             nxt_idx = rnd.choices(candidates, weights=probs, k=1)[0]
             sentence.append(self.idx_to_word[nxt_idx])
@@ -129,7 +134,8 @@ class MarkovBot:
             w1, w2 = w2, self.idx_to_word[nxt_idx]
             if len(sentence) > 2 and sentence[-1] in {".", "!", "?"}:
                 break
-        return " ".join(sentence)
+        sentence = self.add_punctuation(" ".join(sentence))
+        return sentence
     def reply(self, message_text):
         words = message_text.lower().split()
         prompt_words = [w for w in words if w in self.vocab_set and w not in config.STOPWORDS]
@@ -160,4 +166,3 @@ class MarkovBot:
             length = rnd.choices(lengths, weights=weights, k=1)[0],
             prompt_words=prompt_words
         )
-

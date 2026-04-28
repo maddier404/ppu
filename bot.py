@@ -44,7 +44,8 @@ def create_bot(markov, token, prefix, keep_alive):
         user_memory[message.author.id] = message.content.lower()
         greet = message.content.lower()
         greetcheck = greet.split()
-        if any("ppu" in greetcheck) and not message.content.startswith(prefix):
+        print(f"{greetcheck}")
+        if "ppu" in greetcheck and not message.content.startswith(prefix):
             await message.channel.send("that's me!")
         await bot.process_commands(message)
     @bot.command(name="ppu")

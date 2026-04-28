@@ -73,6 +73,7 @@ def create_bot(markov, token, prefix, keep_alive):
         await ctx.send("my pronouns are it/she! i'm bot!")
     @bot.command(name="vlist")
     async def vlist(ctx):
+        print("vlist command triggered")
         vocab_list = corpus.vocab
         print(vocab_list)  # Debugging line
         if vocab_list:

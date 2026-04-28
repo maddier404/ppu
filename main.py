@@ -1,5 +1,14 @@
+# imports
+import os
+import numpy as np
+import random as rnd
+from pathlib import Path
 from flask import Flask
 from threading import Thread
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
+# pinger
 app = Flask('')
 @app.route('/')
 def home():
@@ -10,122 +19,115 @@ def keep_alive():
     if not os.environ.get("WERKZEUG_RUN_MAIN"):
         t = Thread(target=run)
         t.start()
-
-import numpy as np
-import random as rnd
-from pathlib import Path
-# Sample dataset: A small text corpus
-file_path=Path('corpus.txt')
+# get corpus and vocab
+file_path = Path('corpus.txt')
 corpus = file_path.read_text()
-# tokenize corpus
 words = corpus.lower().split()
-# vocab creation
 vocab = list(set(words))
-vocab_size = len(vocab)
-#print(f"Vocabulary: {vocab}")
-#print(f"Vocabulary size: {vocab_size}")
 word_to_idx = {word: idx for idx, word in enumerate(vocab)}
 idx_to_word = {idx: word for word, idx in word_to_idx.items()}
-# convert words in corpus to index
 corpus_indices = [word_to_idx[word] for word in words]
-# init bigram counts matrix. no, trigram
-trigram_counts = {}
-# count occurrences of each bigram in corpus
-for i in range(len(corpus_indices) - 2):
-    w1 = corpus_indices[i]
-    w2 = corpus_indices[i + 1]
-    w3 = corpus_indices[i + 2]
-    key = (w1, w2)
-    if key not in trigram_counts:
-        trigram_counts[key] = {}
-    trigram_counts[key][w3] = trigram_counts[key].get(w3, 0) + 1
-trigram_probs = {}
-for key, next_words in trigram_counts.items():
-    total = sum(next_words.values()) + 0.01 * len(vocab)
-    trigram_probs[key] = {
-        word: (count + 0.01) / total
-        for word, count in next_words.items()
-    }
-# normalize counts to get probabilities
-#trigram_probabilities = trigram_counts / trigram_counts.sum(axis=2, keepdims=True)
-#print("Bigrams probabilities matrix: ", bigram_probabilities)
-def predict_next_word(w1, w2):
-    key = (word_to_idx[w1], word_to_idx[w2])
-    if key not in trigram_probs:
-        return rnd.choice(vocab)
-    next_words = trigram_probs[key]
-    words = list(next_words.keys())
-    probs = list(next_words.values())
-    next_idx = np.random.choice(words, p=probs)
-    return idx_to_word[next_idx]
-# Test the model with a word
-#current_word = "ai"
-#next_word = predict_next_word(current_word, bigram_probabilities)
-#print(f"Given '{current_word}', the model predicts '{next_word}'.")
-def generate_sentence(w1, w2, length=5):
-    sentence = [w1, w2]
-    current_w1, current_w2 = w1, w2
-    for _ in range(length):
-        next_word = predict_next_word(current_w1, current_w2)
-        sentence.append(next_word)
-        current_w1 = current_w2
-        current_w2 = next_word
-    return ' '.join(sentence)
-# for i in range(1):
-    # generated_sentence=generate_sentence("maddie", bigram_probabilities, length=length)
-    # print(generated_sentence)
-# ==============================================================
-# ==============================================================
-# ==============================================================
-import os
-import discord
-from discord.ext import commands
-from dotenv import load_dotenv
+# markov bs i hate classes AAAAAAAAA
+class MarkovBot:
+    def __init__(self, corpus_indices, idx_to_word, word_to_idx, vocab):
+        self.corpus = corpus_indices
+        self.idx_to_word = idx_to_word
+        self.word_to_idx = word_to_idx
+        self.vocab = vocab
+        self.trigram = {}
+        self.bigram = {}
+        self.build_models()
+    # read corpus
+    def build_models(self):
+        for i in range(len(self.corpus) - 1):
+            w1 = self.corpus[i]
+            w2 = self.corpus[i + 1]
+            if w1 not in self.bigram:
+                self.bigram[w1] = {}
+            self.bigram[w1][w2] = self.bigram[w1].get(w2, 0) + 1
+        for i in range(len(self.corpus) - 2):
+            w1 = self.corpus[i]
+            w2 = self.corpus[i + 1]
+            w3 = self.corpus[i + 2]
+            key = (w1, w2)
+            if key not in self.trigram:
+                self.trigram[key] = {}
+            self.trigram[key][w3] = self.trigram[key].get(w3, 0) + 1
+    # do stuff with corpus i don't remember i kinda got lost in the code and forgot to comment
+    def next_word(self, w1, w2):
+        key = (self.word_to_idx[w1], self.word_to_idx[w2])
+        # trigram
+        if key in self.trigram:
+            options = self.trigram[key]
+            words = list(options.keys())
+            probs = list(options.values())
+            next_idx = np.random.choice(words, p=np.array(probs) / sum(probs))
+            return self.idx_to_word[next_idx]
+        # bigram fallback
+        if self.word_to_idx[w2] in self.bigram:
+            options = self.bigram[self.word_to_idx[w2]]
+            words = list(options.keys())
+            probs = list(options.values())
+            next_idx = np.random.choice(words, p=np.array(probs) / sum(probs))
+            return self.idx_to_word[next_idx]
+        # random fallback
+        return rnd.choice(self.vocab)
+    # make the text
+    def generate(self, w1, w2, length=10, prompt_words=None):
+        sentence = [w1, w2]
+        for _ in range(length):
+            nxt = self.next_word(w1, w2)
+            if prompt_words and rnd.random() < 0.2:
+                nxt = rnd.choice(prompt_words)
+            sentence.append(nxt)
+            w1, w2 = w2, nxt
+        return " ".join(sentence)
+    # this is called when the command is used. ex !speak hi how are you
+    def reply(self, message_text):
+        words = message_text.lower().split()
+        prompt_words = [w for w in words if w in self.vocab]
+        if len(prompt_words) >= 2:
+            weights = [words.count(w) for w in prompt_words]
+            w1 = rnd.choices(prompt_words, weights=weights)[0]
+            w2 = rnd.choices(prompt_words, weights=weights)[0]
+        else:
+            w1, w2 = rnd.choice(self.vocab), rnd.choice(self.vocab)
+        return self.generate(w1, w2, length=rnd.randint(7, 20), prompt_words=prompt_words)
+markov = MarkovBot(corpus_indices, idx_to_word, word_to_idx, vocab)
+user_memory = {}
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
-#bot = discord.Client(intents=discord.Intents.default())
-# event listener
 @bot.event
 async def on_ready():
-    guild_count = 0
-    for guild in bot.guilds:
-        print(f"- {guild.id} (name: {guild.name})")
-        guild_count = guild_count + 1
-    print("ppu is in " + str(guild_count) + "guilds")
+    print(f"Logged in as {bot.user}")
+    print(f"In {len(bot.guilds)} guilds")
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
+    user_memory[message.author.id] = message.content.lower()
     if message.content.lower() == "ppu" and not message.content.startswith("!"):
-        await message.channel.send(f"that's me!")
+        await message.channel.send("that's me!")
     await bot.process_commands(message)
 @bot.command(name="ppu")
 async def ppu(ctx):
     await ctx.send(f"ppu latency: {round(bot.latency * 1000)}ms")
 @bot.command(name="specs")
 async def specs(ctx):
-    await ctx.send(f"ppu specs: \nclock speed: 1hz\nsilliness: off the freacking charts")
+    await ctx.send("ppu specs:\nclock speed: 1hz\nsilliness: off the freacking charts")
 @bot.command(name="speak")
 async def speak(ctx):
-    w1 = rnd.choice(vocab)
-    w2 = rnd.choice(vocab)
-    length = rnd.randint(7, 20)
-    generated_sentence = generate_sentence(w1, w2, length=length)
-    await ctx.send(generated_sentence)
+    response = markov.reply(ctx.message.content)
+    await ctx.send(response)
 @bot.command(name="pronouns")
 async def pronouns(ctx):
     await ctx.send("my pronouns are it/she! i'm bot!")
-#@bot.command(name="corpus")
-#async def corpus(ctx):
-#    await ctx.send(file_path.read_text())
-# ==============================================================
+# ===
 bot.remove_command("help")
 @bot.command(name="help")
 async def help(ctx):
     await ctx.send("help\nprefix is !\ncommands:\n-help\n-corpus\n-ppu\n-specs\n-speak\n-pronouns")
-# ==============================================================
-# ==============================================================
-# ==============================================================
+# ===
 keep_alive()
 bot.run(DISCORD_TOKEN)

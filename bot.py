@@ -1,10 +1,35 @@
 import discord
 from discord.ext import commands
+from discord.ui import Button, View
 import corpus
+import random as rnd
 def create_bot(markov, token, prefix, keep_alive):
     bot = commands.Bot(command_prefix=prefix, intents=discord.Intents.all())
     user_memory = {}
     latency_history = []
+    async def paginate_vocabulary(ctx, vocab_list, page=1):
+        words_per_page = 25
+        start_index = (page - 1) * words_per_page
+        end_index = page * words_per_page
+        current_page_words = vocab_list[start_index:end_index]
+        embed = discord.Embed(title="Vocabulary List", color=discord.Color.blue())
+        embed.add_field(name=f"Page {page}", value="\n".join(current_page_words), inline=False)
+        buttons = View()
+        if page > 1:
+            prev_button = Button(label="Previous", style=discord.ButtonStyle.primary, custom_id="prev_page")
+            async def prev_callback(interaction):
+                await paginate_vocabulary(interaction, vocab_list, page - 1)
+                await interaction.response.edit_message(embed=embed, view=buttons)
+            prev_button.callback = prev_callback
+            buttons.add_item(prev_button)
+        if end_index < len(vocab_list):
+            next_button = Button(label="Next", style=discord.ButtonStyle.primary, custom_id="next_page")
+            async def next_callback(interaction):
+                await paginate_vocabulary(interaction, vocab_list, page + 1)
+                await interaction.response.edit_message(embed=embed, view=buttons)
+            next_button.callback = next_callback
+            buttons.add_item(next_button)
+        await ctx.send(embed=embed, view=buttons)
     @bot.event
     async def on_ready():
         print(f"Logged in as {bot.user}")
@@ -48,10 +73,12 @@ def create_bot(markov, token, prefix, keep_alive):
         await ctx.send("my pronouns are it/she! i'm bot!")
     @bot.command(name="vlist")
     async def vlist(ctx):
-        await ctx.send("my vocabulary is:\n", corpus.vocab)
+        vocab_list = corpus.vocab
+        await paginate_vocabulary(ctx, vocab_list, page=1)
     @bot.command(name="vlength")
     async def vlength(ctx):
-        await ctx.send(f"my vocabulary is {len(corpus.vocab)} words long")
+        vocab_length = len(corpus.vocab)
+        await ctx.send(f"my vocabulary is {vocab_length} words long")
     bot.remove_command("help")
     @bot.command(name="help")
     async def help_cmd(ctx):

@@ -157,5 +157,8 @@ bot.remove_command("help")
 async def help(ctx):
     await ctx.send("help\nprefix is !\ncommands:\n-help\n-corpus\n-ppu\n-specs\n-speak\n-pronouns")
 # ===
-keep_alive()
-bot.run(DISCORD_TOKEN)
+try:
+    keep_alive()
+    bot.run(DISCORD_TOKEN)
+except Exception as e:
+    print("CRASH:", e)

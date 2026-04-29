@@ -3,6 +3,9 @@ from discord.ext import commands
 from discord.ui import Button, View
 import random as rnd
 import corpus
+import psutil
+import platform
+import os
 def create_bot(markov, token, prefix, keep_alive):
     corpus_indices, vocab, word_to_idx, idx_to_word, corpus_exists = corpus.load_corpus()
     if not corpus_exists:
@@ -69,10 +72,29 @@ def create_bot(markov, token, prefix, keep_alive):
         ))
     @bot.command(name="specs")
     async def specs(ctx):
-        await ctx.send("ppu specs:\nclock speed: 1hz\nsilliness: off the freacking charts")
+        cpu_cores = psutil.cpu_count(logical=True)
+        cpu_percent = psutil.cpu_percent(interval=1)
+        mem = psutil.virtual_memory()
+        total_mem = round(mem.total/(1024 ** 2))
+        used_mem = round(mem.used/(1024 ** 2))
+        disk = psutil.disk_usage("/")
+        total_disk = round(disk.total/(1024 ** 3), 2)
+        used_disk = round(disk.used/(1024 ** 3), 2)
+        system = platform.system()
+        release = platform.release()
+        python_version = platform.python_version()
+        await ctx.send(
+            f"ppu specs (container)\n"
+            f"os: {system} {release}\n"
+            f"python: {python_version}\n"
+            f"cpu cores: {cpu_cores}\n"
+            f"cpu usage: {cpu_percent}%\n"
+            f"ram: {used_mem}MB / {total_mem}MB\n"
+            f"disk: {used_disk}GB / {total_disk}GB"
+        )
     @bot.command(name="speak")
-    @commands.cooldown(1, 1, commands.BucketType.user)
-    @commands.cooldown(1, 1, commands.BucketType.channel)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.channel)
     async def speak(ctx):
         response = markov.reply(ctx.message.content)
         await ctx.send(response)

@@ -6,6 +6,7 @@ import corpus
 import psutil
 import platform
 import os
+import string
 def create_bot(markov, token, prefix, keep_alive):
     corpus_indices, vocab, word_to_idx, idx_to_word, corpus_exists = corpus.load_corpus()
     if not corpus_exists:
@@ -46,8 +47,10 @@ def create_bot(markov, token, prefix, keep_alive):
             return
         user_memory[message.author.id] = message.content.lower()
         greet = message.content.lower()
-        greetcheck = greet.split()
-        print(f"{greetcheck}")
+        greetstrip = greet.rstrip(",.!?")
+        greetcheck = greetstrip.split()
+        if "ppu" in greetcheck:
+            print(f"{greetcheck}")
         if "ppu" in greetcheck and not message.content.startswith(prefix):
             await message.channel.send("that's me!")
         await bot.process_commands(message)

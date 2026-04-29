@@ -72,22 +72,17 @@ def create_bot(markov, token, prefix, keep_alive):
         ))
     @bot.command(name="specs")
     async def specs(ctx):
-        # cpu info
         cpu_cores = psutil.cpu_count(logical=True)
         cpu_percent = psutil.cpu_percent(interval=1)
-        # mem info
         mem = psutil.virtual_memory()
         total_mem = round(mem.total/(1024 ** 2))
         used_mem = round(mem.used/(1024 ** 2))
-        # disk info
         disk = psutil.disk_usage("/")
         total_disk = round(disk.total/(1024 ** 3), 2)
         used_disk = round(disk.used/(1024 ** 3), 2)
-        # system info and such
         system = platform.system()
         release = platform.release()
         python_version = platform.python_version()
-            # send the thing 
         await ctx.send(
             f"ppu specs (container)\n"
             f"os: {system} {release}\n"
@@ -98,8 +93,8 @@ def create_bot(markov, token, prefix, keep_alive):
             f"disk: {used_disk}GB / {total_disk}GB"
         )
     @bot.command(name="speak")
-    @commands.cooldown(1, 1, commands.BucketType.user)
-    @commands.cooldown(1, 1, commands.BucketType.channel)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.channel)
     async def speak(ctx):
         response = markov.reply(ctx.message.content)
         await ctx.send(response)

@@ -96,8 +96,8 @@ def create_bot(markov, token, prefix, keep_alive):
             f"disk: {used_disk}GB / {total_disk}GB"
         )
     @bot.command(name="speak")
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.cooldown(1, 5, commands.BucketType.channel)
+    @commands.cooldown(2, 2, commands.BucketType.user)
+    @commands.cooldown(2, 2, commands.BucketType.channel)
     async def speak(ctx):
         response = markov.reply(ctx.message.content)
         await ctx.send(response)

@@ -1,5 +1,0 @@
-discord.py
-python-dotenv
-pathlib
-numpy
-flask

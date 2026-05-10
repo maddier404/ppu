@@ -176,9 +176,14 @@ class MarkovBot:
                 w1 = rnd.choice(config.STARTERS)
                 w2 = rnd.choice(self.vocab)
         min_length = 3
-        max_length = 30
+        max_length = 120
         lengths = list(range(min_length, max_length + 1))
-        weights = [max_length - i + min_length for i in lengths]
+        weights = [
+            if i < 21:
+                max_length - i + min_length for i in lengths
+            if i >= 21:
+                max_length - i + min_length * 0.2 for i in lengths
+        ]
         return self.generate(
             w1,
             w2,
